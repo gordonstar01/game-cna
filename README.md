@@ -727,7 +727,7 @@ livenessProbe:
 
 ## 개인 Project
 
-![personal](https://user-images.githubusercontent.com/64522956/93314498-cb454300-f844-11ea-8a74-0def3e22474b.png)
+![image](https://user-images.githubusercontent.com/61398187/93346587-1a07d280-f86f-11ea-9b5b-ca202ce5675e.png)
 
 ## EKS 배포 확인 ($ kubectl get all -n game)
 
