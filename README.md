@@ -978,3 +978,5 @@ spring:
 ![image](https://user-images.githubusercontent.com/61398187/93351451-bda7b180-f874-11ea-9a30-c2287e4c46e3.png)
 
 ## Self-healing
+
+![image](https://user-images.githubusercontent.com/61398187/93352809-31968980-f876-11ea-89b0-fd68ba403533.png)
