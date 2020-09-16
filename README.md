@@ -947,15 +947,19 @@ spec:
 ![image](https://user-images.githubusercontent.com/61398187/93349764-dca54400-f872-11ea-8df4-f33cc922a2ef.png)
 
 ## Deploy / Pipeline
+
 ![image](https://user-images.githubusercontent.com/61398187/93349946-12e2c380-f873-11ea-866e-3b846760f427.png)
 
 ## Circuit Breaker
 siege -c3 -t4S -v http://game-gift:8080/gifts/1
+
 ![image](https://user-images.githubusercontent.com/61398187/93350602-c8157b80-f873-11ea-863d-631a42c1690c.png)
 
 ## Autoscale (HPA)
 siege -c200 -t100S -v http://game-mypage:8080/mypages/1
+
 ![image](https://user-images.githubusercontent.com/61398187/93351205-63a6ec00-f874-11ea-88ad-67c970816ce4.png)
+
 ## ConfigMap, EFS 
 
 ![image](https://user-images.githubusercontent.com/61398187/93349035-f1cda300-f871-11ea-871d-2aae1ae9193e.png)
