@@ -731,33 +731,246 @@ livenessProbe:
 
 ## EKS 배포 확인 ($ kubectl get all -n game)
 
-<img width="1447" alt="스크린샷 2020-09-16 오후 5 39 41" src="https://user-images.githubusercontent.com/64522956/93316473-33952400-f847-11ea-9a03-79e0dc54d005.png">
+![image](https://user-images.githubusercontent.com/61398187/93347476-16288000-f870-11ea-840b-9bb0df70ef6b.png)
 
 ## Saga (1)
 
 미션  달성 후 Database에 바로 commit 후 미션을 달성했다는 정보를 reward 서비스에 이벤트를 송출한다(Publish)
 
-데이터 생성 흐름(1) : Mission 달성 -> Reward 지급 -> Wallet에 생성
+데이터 생성 흐름
 
-<img width="1054" alt="스크린샷 2020-09-16 오후 6 04 06" src="https://user-images.githubusercontent.com/64522956/93316363-0e081a80-f847-11ea-891c-dcfb738f00e6.png">
+1. Mission 달성
+http http://a6ab55eb0a49844cfafc1ca970bdb683-248982235.ap-northeast-1.elb.amazonaws.com/missions customerId=101 status="Achieved"
 
-데이터 생성 흐름(2) : Wallet에서 Reward 교환 -> Gift에 생성(교환 내역) -> Payment에 생성(정산 데이터)
+![image](https://user-images.githubusercontent.com/61398187/93347753-6869a100-f870-11ea-8442-93c6e448509a.png)
 
-<img width="1019" alt="스크린샷 2020-09-16 오후 6 15 52" src="https://user-images.githubusercontent.com/64522956/93317659-b4a0eb00-f848-11ea-864a-84925c7f07ce.png">
+2. wallet 발급
+http http://a6ab55eb0a49844cfafc1ca970bdb683-248982235.ap-northeast-1.elb.amazonaws.com/wallets/1
+
+![image](https://user-images.githubusercontent.com/61398187/93348001-abc40f80-f870-11ea-922d-9c8c52d057c1.png)
+
+3. wallet 교환
+http PUT http://a6ab55eb0a49844cfafc1ca970bdb683-248982235.ap-northeast-1.elb.amazonaws.com/wallets/1 customerId=101 rewardId=2 status="Exchanged"
+
+![image](https://user-images.githubusercontent.com/61398187/93348247-ef1e7e00-f870-11ea-9265-44759aa93fe5.png)
+
+4. gift 생성
+http http://a6ab55eb0a49844cfafc1ca970bdb683-248982235.ap-northeast-1.elb.amazonaws.com/gifts/1
+
+![image](https://user-images.githubusercontent.com/61398187/93348287-fa71a980-f870-11ea-96bd-582f8eefec23.png)
+
+5. gift 사용
+http PUT http://a6ab55eb0a49844cfafc1ca970bdb683-248982235.ap-northeast-1.elb.amazonaws.com/gifts/1 status="Used" walletId=3
+
+![image](https://user-images.githubusercontent.com/61398187/93348370-15441e00-f871-11ea-833c-18e18d8821d7.png)
+
+6. 메일 발송
+http http://a6ab55eb0a49844cfafc1ca970bdb683-248982235.ap-northeast-1.elb.amazonaws.com/emails/1
+
+![image](https://user-images.githubusercontent.com/61398187/93348479-37d63700-f871-11ea-92e9-80447f081f85.png)
 
 ## CQRS (2)
 
 Database 조회 업무만을 수행하기 위한 mypage 개발
-<img width="932" alt="스크린샷 2020-09-16 오후 6 17 44" src="https://user-images.githubusercontent.com/64522956/93317884-f16ce200-f848-11ea-889b-d9a26c5e0c50.png">
+1. 소스
+```
+@Service
+public class MypageViewHandler {
 
-## ConfigMap, EFS 수정
 
-<img width="773" alt="스크린샷 2020-09-16 오후 6 20 12" src="https://user-images.githubusercontent.com/64522956/93318214-650eef00-f849-11ea-956e-150cb7f3093a.png">
+    @Autowired
+    private MypageRepository mypageRepository;
 
-## Gateway, VirtualService, DestinationRule 설정
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenMissionAchieved_then_CREATE_1 (@Payload MissionAchieved missionAchieved) {
+        try {
+            if (missionAchieved.isMe()) {
+                // view 객체 생성
+                Mypage mypage = new Mypage();
+                // view 객체에 이벤트의 Value 를 set 함
+                mypage.setMissionId(missionAchieved.getId());
+                mypage.setMissionStatus(missionAchieved.getStatus());
+                // view 레파지 토리에 save
+                mypageRepository.save(mypage);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
 
-<img width="590" alt="스크린샷 2020-09-16 오후 6 23 04" src="https://user-images.githubusercontent.com/64522956/93318451-b0290200-f849-11ea-85d9-24fded664e26.png">
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenAllocated_then_UPDATE_1(@Payload Allocated allocated) {
+        try {
+            if (allocated.isMe()) {
+                // view 객체 조회
+                List<Mypage> mypageList = mypageRepository.findByMissionId(allocated.getMissionId());
+                for(Mypage mypage : mypageList){
+                    // view 객체에 이벤트의 eventDirectValue 를 set 함
+                    mypage.setRewardId(allocated.getId());
+                    // view 레파지 토리에 save
+                    mypageRepository.save(mypage);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenIssued_then_UPDATE_2(@Payload Issued issued) {
+        try {
+            if (issued.isMe()) {
+                // view 객체 조회
+                List<Mypage> mypageList = mypageRepository.findByRewardId(issued.getId());
+                for(Mypage mypage : mypageList){
+                    // view 객체에 이벤트의 eventDirectValue 를 set 함
+                    mypage.setRewardStatus(issued.getStatus());
+                    // view 레파지 토리에 save
+                    mypageRepository.save(mypage);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenExchanged_then_UPDATE_3(@Payload Exchanged exchanged) {
+        try {
+            if (exchanged.isMe()) {
+                // view 객체 조회
+                List<Mypage> mypageList = mypageRepository.findByRewardId(exchanged.getId());
+                for(Mypage mypage : mypageList){
+                    // view 객체에 이벤트의 eventDirectValue 를 set 함
+                    mypage.setRewardStatus(exchanged.getStatus());
+                    // view 레파지 토리에 save
+                    mypageRepository.save(mypage);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
 
-kiali 확인
+}
+```
+![image](https://user-images.githubusercontent.com/61398187/93348858-b632d900-f871-11ea-8c69-791e302a1390.png)
 
-<img width="1766" alt="스크린샷 2020-09-16 오후 6 25 55" src="https://user-images.githubusercontent.com/64522956/93318809-16158980-f84a-11ea-82b1-66bc0348dc5b.png">
+## Gateway
+```
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: game-gateway
+  namespace: game
+spec:
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: game-gateway
+  namespace: game
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - game-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /missions
+    rewrite:
+      uri: /missions
+    route:
+    - destination:
+        host: game-mission
+        port:
+          number: 8080
+  - match:
+    - uri:
+        prefix: /rewards
+    rewrite:
+      uri: /rewards
+    route:
+    - destination:
+        host: game-reward
+        port:
+          number: 8080 
+  - match:
+    - uri:
+        prefix: /wallets
+    rewrite:
+      uri: /wallets
+    route:
+    - destination:
+        host: game-wallet
+        port:
+          number: 8080
+  - match:
+    - uri:
+        prefix: /gifts
+    rewrite:
+      uri: /gifts
+    route:
+    - destination:
+        host: game-gift
+        port:
+          number: 8080
+  - match:
+    - uri:
+        prefix: /mypages
+    rewrite:
+      uri: /mypages
+    route:
+    - destination:
+        host: game-mypage
+        port:
+          number: 8080
+  - match:
+    - uri:
+        prefix: /emails
+    rewrite:
+      uri: /emails
+    route:
+    - destination:
+        host: game-email
+        port:
+          number: 8080
+```
+![image](https://user-images.githubusercontent.com/61398187/93349764-dca54400-f872-11ea-8df4-f33cc922a2ef.png)
+
+## Deploy / Pipeline
+![image](https://user-images.githubusercontent.com/61398187/93349946-12e2c380-f873-11ea-866e-3b846760f427.png)
+
+## Circuit Breaker
+siege -c3 -t4S -v http://game-gift:8080/gifts/1
+![image](https://user-images.githubusercontent.com/61398187/93350602-c8157b80-f873-11ea-863d-631a42c1690c.png)
+
+## Autoscale (HPA)
+siege -c200 -t100S -v http://game-mypage:8080/mypages/1
+![image](https://user-images.githubusercontent.com/61398187/93351205-63a6ec00-f874-11ea-88ad-67c970816ce4.png)
+## ConfigMap, EFS 
+
+![image](https://user-images.githubusercontent.com/61398187/93349035-f1cda300-f871-11ea-871d-2aae1ae9193e.png)
+![image](https://user-images.githubusercontent.com/61398187/93349168-204b7e00-f872-11ea-9377-86b7510ebae5.png)
+
+## Polyglot
+```
+spring:
+  profiles: docker
+  datasource:
+    url: jdbc:mariadb://${DB_URL}/admin06_mariadb?useUnicode=yes&characterEncoding=UTF-8
+    driver-class-name: org.mariadb.jdbc.Driver
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+```
+![image](https://user-images.githubusercontent.com/61398187/93351451-bda7b180-f874-11ea-9a30-c2287e4c46e3.png)
+
+## Self-healing
