@@ -733,7 +733,7 @@ livenessProbe:
 
 ![image](https://user-images.githubusercontent.com/61398187/93347476-16288000-f870-11ea-840b-9bb0df70ef6b.png)
 
-## Saga (1)
+## Saga
 
 미션  달성 후 Database에 바로 commit 후 미션을 달성했다는 정보를 reward 서비스에 이벤트를 송출한다(Publish)
 
@@ -769,7 +769,7 @@ http http://a6ab55eb0a49844cfafc1ca970bdb683-248982235.ap-northeast-1.elb.amazon
 
 ![image](https://user-images.githubusercontent.com/61398187/93348479-37d63700-f871-11ea-92e9-80447f081f85.png)
 
-## CQRS (2)
+## CQRS
 
 Database 조회 업무만을 수행하기 위한 mypage 개발
 1. 소스
