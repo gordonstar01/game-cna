@@ -775,7 +775,7 @@ http http://a6ab55eb0a49844cfafc1ca970bdb683-248982235.ap-northeast-1.elb.amazon
 
 ## CQRS
 
-Database 조회 업무만을 수행하기 위한 email 개발
+Database 조회 업무만을 수행하기 위한 mypage 개발
 1. 소스
 ```
   profiles: docker
@@ -831,9 +831,13 @@ siege -c3 -t4S -v http://game-email:8080/emails/1
 ![image](https://user-images.githubusercontent.com/61398187/93350602-c8157b80-f873-11ea-863d-631a42c1690c.png)
 
 ## Autoscale (HPA)
+
+![image](https://user-images.githubusercontent.com/61398187/93419904-f2555080-f8e8-11ea-9f2c-5915c380baf3.png)
+
 siege -c200 -t100S -v http://game-email:8080/emails/1
 
 ![image](https://user-images.githubusercontent.com/61398187/93351205-63a6ec00-f874-11ea-88ad-67c970816ce4.png)
+
 
 ## Zero-downtime deploy (readliness probs)
 배포시 지속적인 요청을 보냈을때 에러 없이 진행됨
