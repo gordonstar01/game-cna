@@ -771,6 +771,8 @@ http http://a6ab55eb0a49844cfafc1ca970bdb683-248982235.ap-northeast-1.elb.amazon
 
 7. 메일 발송 확인
 
+![image](https://user-images.githubusercontent.com/61398187/93419541-0f3d5400-f8e8-11ea-8d72-7aaab0a08892.png)
+
 ## CQRS
 
 Database 조회 업무만을 수행하기 위한 email 개발
@@ -782,6 +784,25 @@ Database 조회 업무만을 수행하기 위한 email 개발
     driver-class-name: org.mariadb.jdbc.Driver
     username: ${DB_USER}
     password: ${DB_PASSWORD}
+```
+```
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenExchanged_then_UPDATE_Used(@Payload Used used) {
+        try {
+            if (used.isMe()) {
+                // view 객체 조회
+                List<Mypage> mypageList = mypageRepository.findByRewardId(used.getId());
+                for(Mypage mypage : mypageList){
+                    // view 객체에 이벤트의 eventDirectValue 를 set 함
+                    mypage.setEmailStatus(used.getStatus());
+                    // view 레파지 토리에 save
+                    mypageRepository.save(mypage);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
 ```
 ![image](https://user-images.githubusercontent.com/61398187/93348858-b632d900-f871-11ea-8c69-791e302a1390.png)
 
@@ -821,7 +842,7 @@ siege -c200 -t100S -v http://game-email:8080/emails/1
 
 ## ConfigMap, EFS 
 
-![image](https://user-images.githubusercontent.com/61398187/93349035-f1cda300-f871-11ea-871d-2aae1ae9193e.png)
+![image](https://user-images.githubusercontent.com/61398187/93419690-74914500-f8e8-11ea-9379-57ee1d200e83.png)
 ![image](https://user-images.githubusercontent.com/61398187/93349168-204b7e00-f872-11ea-9377-86b7510ebae5.png)
 
 ## Polyglot
