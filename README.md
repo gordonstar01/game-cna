@@ -932,11 +932,13 @@ exec:
   - cat
   - /mnt/aws/healthy
 ```
-
-## Autoscale
-
-![image](https://user-images.githubusercontent.com/61398187/93424822-c12e4d80-f8f3-11ea-9769-99870ac77f82.png)
+![image](https://user-images.githubusercontent.com/61398187/93427584-03a65900-f8f9-11ea-8537-a92dccf9444d.png)
 
 ## Circuit Breaker
 
+![image](https://user-images.githubusercontent.com/61398187/93424822-c12e4d80-f8f3-11ea-9769-99870ac77f82.png)
+
 ## Zero-downtime deploy (readliness probs)
+
+![image](https://user-images.githubusercontent.com/61398187/93427166-57fd0900-f8f8-11ea-99ac-fa751aaf5e0f.png)
+
