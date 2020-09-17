@@ -932,3 +932,11 @@ exec:
   - cat
   - /mnt/aws/healthy
 ```
+
+## Autoscale
+
+![image](https://user-images.githubusercontent.com/61398187/93424822-c12e4d80-f8f3-11ea-9769-99870ac77f82.png)
+
+## Circuit Breaker
+
+## Zero-downtime deploy (readliness probs)
