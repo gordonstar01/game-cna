@@ -845,7 +845,36 @@ siege -c200 -t100S -v http://game-email:8080/emails/1
 ![image](https://user-images.githubusercontent.com/61398187/93405416-e7d68f00-f8c7-11ea-94bb-f1a4c94fde00.png)
 
 ## ConfigMap, EFS 
+```
+spec:
+  containers:
+  - env:
+    - name: DB_URL
+      valueFrom:
+        configMapKeyRef:
+          name: email-config
+          key: DB_URL
+    - name: DB_USER
+      valueFrom:
+        configMapKeyRef:
+          name: email-config
+          key: DB_USER
+    - name: DB_PASSWORD
+      valueFrom:
+        configMapKeyRef:
+          name: email-config
+          key: DB_PASSWORD
 
+          ...
+
+    volumeMounts:
+    - mountPath: "/mnt/aws"
+      name: volume
+  volumes:
+    - name: volume
+      persistentVolumeClaim:
+        claimName: aws-efs
+```
 ![image](https://user-images.githubusercontent.com/61398187/93419690-74914500-f8e8-11ea-9379-57ee1d200e83.png)
 ![image](https://user-images.githubusercontent.com/61398187/93349168-204b7e00-f872-11ea-9377-86b7510ebae5.png)
 
