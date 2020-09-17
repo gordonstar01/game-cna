@@ -893,3 +893,28 @@ spring:
 ## Self-healing (liveness probs)
 
 ![image](https://user-images.githubusercontent.com/61398187/93352809-31968980-f876-11ea-89b0-fd68ba403533.png)
+
+
+## Request / Response
+```
+@FeignClient(name="customer", url="${api.url.customer}", fallback = CustomerServiceFallback.class)
+public interface CustomerService {
+
+    @RequestMapping(method= RequestMethod.POST, path="/customers")
+    public void exchange(@RequestBody Customer customer);
+
+}
+
+@Component
+public class CustomerServiceFallback implements CustomerService {
+    @Override
+    public void exchange(Customer email) {
+        System.out.println("Circuit breaker has been opened. Fallback returned instead.");
+    }
+}
+
+```
+
+## 
+실패
+![image](https://user-images.githubusercontent.com/61398187/93422235-4d3d7680-f8ee-11ea-9dca-091871e5f104.png)
