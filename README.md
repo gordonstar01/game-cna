@@ -915,6 +915,20 @@ public class CustomerServiceFallback implements CustomerService {
 
 ```
 
-## 
+## Self-healing (liveness probs)
 실패
-![image](https://user-images.githubusercontent.com/61398187/93422235-4d3d7680-f8ee-11ea-9dca-091871e5f104.png)
+```
+exec:
+  command:
+  - cat
+  - /mnt/aws/healthy-test
+```
+![image](https://user-images.githubusercontent.com/61398187/93423333-b625ee00-f8f0-11ea-84be-d26d7ceceac1.png)
+
+성공
+```
+exec:
+  command:
+  - cat
+  - /mnt/aws/healthy
+```
