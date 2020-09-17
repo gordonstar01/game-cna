@@ -727,7 +727,7 @@ livenessProbe:
 
 ## 개인 Project
 
-![image](https://user-images.githubusercontent.com/61398187/93346587-1a07d280-f86f-11ea-9b5b-ca202ce5675e.png)
+![image](https://user-images.githubusercontent.com/61398187/93418550-a654dc80-f8e5-11ea-9e65-dcc664c764f2.png)
 
 ## EKS 배포 확인 ($ kubectl get all -n game)
 
@@ -769,170 +769,24 @@ http http://a6ab55eb0a49844cfafc1ca970bdb683-248982235.ap-northeast-1.elb.amazon
 
 ![image](https://user-images.githubusercontent.com/61398187/93348479-37d63700-f871-11ea-92e9-80447f081f85.png)
 
+7. 메일 발송 확인
+
 ## CQRS
 
-Database 조회 업무만을 수행하기 위한 mypage 개발
+Database 조회 업무만을 수행하기 위한 email 개발
 1. 소스
 ```
-@Service
-public class MypageViewHandler {
-
-
-    @Autowired
-    private MypageRepository mypageRepository;
-
-    @StreamListener(KafkaProcessor.INPUT)
-    public void whenMissionAchieved_then_CREATE_1 (@Payload MissionAchieved missionAchieved) {
-        try {
-            if (missionAchieved.isMe()) {
-                // view 객체 생성
-                Mypage mypage = new Mypage();
-                // view 객체에 이벤트의 Value 를 set 함
-                mypage.setMissionId(missionAchieved.getId());
-                mypage.setMissionStatus(missionAchieved.getStatus());
-                // view 레파지 토리에 save
-                mypageRepository.save(mypage);
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    @StreamListener(KafkaProcessor.INPUT)
-    public void whenAllocated_then_UPDATE_1(@Payload Allocated allocated) {
-        try {
-            if (allocated.isMe()) {
-                // view 객체 조회
-                List<Mypage> mypageList = mypageRepository.findByMissionId(allocated.getMissionId());
-                for(Mypage mypage : mypageList){
-                    // view 객체에 이벤트의 eventDirectValue 를 set 함
-                    mypage.setRewardId(allocated.getId());
-                    // view 레파지 토리에 save
-                    mypageRepository.save(mypage);
-                }
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-    @StreamListener(KafkaProcessor.INPUT)
-    public void whenIssued_then_UPDATE_2(@Payload Issued issued) {
-        try {
-            if (issued.isMe()) {
-                // view 객체 조회
-                List<Mypage> mypageList = mypageRepository.findByRewardId(issued.getId());
-                for(Mypage mypage : mypageList){
-                    // view 객체에 이벤트의 eventDirectValue 를 set 함
-                    mypage.setRewardStatus(issued.getStatus());
-                    // view 레파지 토리에 save
-                    mypageRepository.save(mypage);
-                }
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-    @StreamListener(KafkaProcessor.INPUT)
-    public void whenExchanged_then_UPDATE_3(@Payload Exchanged exchanged) {
-        try {
-            if (exchanged.isMe()) {
-                // view 객체 조회
-                List<Mypage> mypageList = mypageRepository.findByRewardId(exchanged.getId());
-                for(Mypage mypage : mypageList){
-                    // view 객체에 이벤트의 eventDirectValue 를 set 함
-                    mypage.setRewardStatus(exchanged.getStatus());
-                    // view 레파지 토리에 save
-                    mypageRepository.save(mypage);
-                }
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-}
+  profiles: docker
+  datasource:
+    url: jdbc:mariadb://${DB_URL}/admin06_mariadb?useUnicode=yes&characterEncoding=UTF-8
+    driver-class-name: org.mariadb.jdbc.Driver
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
 ```
 ![image](https://user-images.githubusercontent.com/61398187/93348858-b632d900-f871-11ea-8c69-791e302a1390.png)
 
 ## Gateway
 ```
-apiVersion: networking.istio.io/v1alpha3
-kind: Gateway
-metadata:
-  name: game-gateway
-  namespace: game
-spec:
-  selector:
-    istio: ingressgateway # use istio default controller
-  servers:
-  - port:
-      number: 80
-      name: http
-      protocol: HTTP
-    hosts:
-    - "*"
----
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: game-gateway
-  namespace: game
-spec:
-  hosts:
-  - "*"
-  gateways:
-  - game-gateway
-  http:
-  - match:
-    - uri:
-        prefix: /missions
-    rewrite:
-      uri: /missions
-    route:
-    - destination:
-        host: game-mission
-        port:
-          number: 8080
-  - match:
-    - uri:
-        prefix: /rewards
-    rewrite:
-      uri: /rewards
-    route:
-    - destination:
-        host: game-reward
-        port:
-          number: 8080 
-  - match:
-    - uri:
-        prefix: /wallets
-    rewrite:
-      uri: /wallets
-    route:
-    - destination:
-        host: game-wallet
-        port:
-          number: 8080
-  - match:
-    - uri:
-        prefix: /gifts
-    rewrite:
-      uri: /gifts
-    route:
-    - destination:
-        host: game-gift
-        port:
-          number: 8080
-  - match:
-    - uri:
-        prefix: /mypages
-    rewrite:
-      uri: /mypages
-    route:
-    - destination:
-        host: game-mypage
-        port:
-          number: 8080
   - match:
     - uri:
         prefix: /emails
@@ -951,12 +805,12 @@ spec:
 ![image](https://user-images.githubusercontent.com/61398187/93349946-12e2c380-f873-11ea-866e-3b846760f427.png)
 
 ## Circuit Breaker
-siege -c3 -t4S -v http://game-gift:8080/gifts/1
+siege -c3 -t4S -v http://game-email:8080/emails/1
 
 ![image](https://user-images.githubusercontent.com/61398187/93350602-c8157b80-f873-11ea-863d-631a42c1690c.png)
 
 ## Autoscale (HPA)
-siege -c200 -t100S -v http://game-mypage:8080/mypages/1
+siege -c200 -t100S -v http://game-email:8080/emails/1
 
 ![image](https://user-images.githubusercontent.com/61398187/93351205-63a6ec00-f874-11ea-88ad-67c970816ce4.png)
 
