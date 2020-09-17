@@ -960,6 +960,11 @@ siege -c200 -t100S -v http://game-mypage:8080/mypages/1
 
 ![image](https://user-images.githubusercontent.com/61398187/93351205-63a6ec00-f874-11ea-88ad-67c970816ce4.png)
 
+## Zero-downtime deploy (readliness probs)
+배포시 지속적인 요청을 보냈을때 에러 없이 진행됨
+
+![image](https://user-images.githubusercontent.com/61398187/93405416-e7d68f00-f8c7-11ea-94bb-f1a4c94fde00.png)
+
 ## ConfigMap, EFS 
 
 ![image](https://user-images.githubusercontent.com/61398187/93349035-f1cda300-f871-11ea-871d-2aae1ae9193e.png)
@@ -977,6 +982,6 @@ spring:
 ```
 ![image](https://user-images.githubusercontent.com/61398187/93351451-bda7b180-f874-11ea-9a30-c2287e4c46e3.png)
 
-## Self-healing
+## Self-healing (liveness probs)
 
 ![image](https://user-images.githubusercontent.com/61398187/93352809-31968980-f876-11ea-89b0-fd68ba403533.png)
